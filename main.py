@@ -3,13 +3,15 @@ import random
 import pygame
 from queue import PriorityQueue
 
-HEIGHT, WIDTH = 800, 800
+pygame.init()
+
+HEIGHT, WIDTH = 900, 900
 window = pygame.display.set_mode((HEIGHT, WIDTH))
 pygame.display.set_caption("A* Pathfinding visualizer")
 
 RED = (255, 0, 0)
 GREEN = (0, 255, 0)
-BLUE = (0, 255, 0)
+BLUE = (0, 0, 255)
 YELLOW = (255, 255, 0)
 WHITE = (255, 255, 255)
 BLACK = (0, 0, 0)
@@ -173,8 +175,8 @@ def dijkstra(draw, grid, start, end):
 
 
 def algorithm(draw, grid, start, end):
-    # aStar(draw, grid, start, end)
-    dijkstra(draw, grid, start, end)
+    aStar(draw, grid, start, end)
+    # dijkstra(draw, grid, start, end)
 
 
 def huresticFunction(intermediate_node, end_node):
@@ -184,6 +186,7 @@ def huresticFunction(intermediate_node, end_node):
 
 
 def buildGrid(row, width):
+
     grid = []
     node_width = width // row
     for i in range(row):
@@ -216,7 +219,7 @@ def getClickedPosition(position, rows, width):
 
 
 def main(window, WIDTH):
-    ROWS = 50
+    ROWS = 90
     grid = buildGrid(ROWS, WIDTH)
 
     start, end = None, None
