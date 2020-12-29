@@ -1,188 +1,20 @@
-import math
-import random
 import pygame
-from queue import PriorityQueue
+from node import Node
+from a_star import aStar
+from dijkstra import dijkstra
 
 pygame.init()
 
 HEIGHT, WIDTH = 900, 900
 window = pygame.display.set_mode((HEIGHT, WIDTH))
-pygame.display.set_caption("A* Pathfinding visualizer")
+pygame.display.set_caption("Pathfinding visualizer")
 
-RED = (255, 0, 0)
-GREEN = (0, 255, 0)
-BLUE = (0, 0, 255)
-YELLOW = (255, 255, 0)
-WHITE = (255, 255, 255)
-BLACK = (0, 0, 0)
-PURPLE = (128, 0, 128)
-ORANGE = (255, 165, 0)
 GREY = (128, 128, 128)
-CYAN = (0, 255, 255)
-
-
-class Node:
-    def __init__(self, row, column, width, total_rows):
-        self.row = row
-        self.column = column
-        self.x = row * width
-        self.y = column * width
-        self.color = WHITE
-        self.width = width
-        self.neighbors = []
-        self.total_rows = total_rows
-
-    def getPosition(self):
-        return self.row, self.column
-
-    def isCLosed(self):
-        return self.color == RED
-
-    def isVisiting(self):
-        return self.color == GREEN
-
-    def isObstacle(self):
-        return self.color == BLACK
-
-    def isStartNode(self):
-        return self.color == ORANGE
-
-    def isEndNode(self):
-        return self.color == CYAN
-
-    def resetNode(self):
-        self.color = WHITE
-
-    def makeStartNode(self):
-        self.color = ORANGE
-
-    def makeEndNode(self):
-        self.color = CYAN
-
-    def makeVisited(self):
-        self.color = RED
-
-    def makeVisiting(self):
-        self.color = GREEN
-
-    def makeObstacle(self):
-        self.color = BLACK
-
-    def makePath(self):
-        self.color = PURPLE
-
-    def draw(self, window):
-        pygame.draw.rect(window, self.color, (self.x, self.y, self.width, self.width))
-
-    def updateNeighbors(self, grid):
-        self.neighbors = []
-        if (
-            self.row < self.total_rows - 1
-            and not grid[self.row + 1][self.column].isObstacle()
-        ):
-            self.neighbors.append(grid[self.row + 1][self.column])
-        if self.row > 0 and not grid[self.row - 1][self.column].isObstacle():
-            self.neighbors.append(grid[self.row - 1][self.column])
-        if (
-            self.column < self.total_rows - 1
-            and not grid[self.row][self.column + 1].isObstacle()
-        ):
-            self.neighbors.append(grid[self.row][self.column + 1])
-        if self.column > 0 and not grid[self.row][self.column - 1].isObstacle():
-            self.neighbors.append(grid[self.row][self.column - 1])
-
-    def __lt__(self, other):
-        return False
-
-
-def reconstructPath(came_from, current, draw):
-    while current in came_from:
-        current = came_from[current]
-        current.makePath()
-        draw()
-
-
-def aStar(draw, grid, start, end):
-    count = 0
-    priority_queue = PriorityQueue()
-    priority_queue.put((0, count, start))
-    came_from = {}
-    g_score = {node: math.inf for row in grid for node in row}
-    g_score[start] = 0
-    f_score = {node: math.inf for row in grid for node in row}
-    f_score[start] = huresticFunction(start.getPosition(), end.getPosition())
-    open_set = {start}
-    while not priority_queue.empty():
-        for event in pygame.event.get():
-            if event.type == pygame.QUIT:
-                pygame.quit()
-        current = priority_queue.get()[2]
-        open_set.remove(current)
-        if current == end:
-            reconstructPath(came_from, end, draw)
-            return True
-        for neighbor in current.neighbors:
-            temp_g_score = g_score[current] + 1
-            if temp_g_score < g_score[neighbor]:
-                came_from[neighbor] = current
-                g_score[neighbor] = temp_g_score
-                f_score[neighbor] = temp_g_score + huresticFunction(
-                    neighbor.getPosition(), end.getPosition()
-                )
-                if neighbor not in open_set:
-                    count += 1
-                    priority_queue.put((f_score[neighbor], count, neighbor))
-                    open_set.add(neighbor)
-                    if neighbor != end:
-                        neighbor.makeVisiting()
-        draw()
-        if current != start:
-            current.makeVisited()
-    return False
-
-
-def dijkstra(draw, grid, start, end):
-    visited = {node: False for row in grid for node in row}
-    distance = {node: math.inf for row in grid for node in row}
-    distance[start] = 0
-    came_from = {}
-    priority_queue = PriorityQueue()
-    priority_queue.put((0, start))
-    while not priority_queue.empty():
-        for event in pygame.event.get():
-            if event.type == pygame.QUIT:
-                pygame.quit()
-        current = priority_queue.get()[1]
-
-        if visited[current]:
-            continue
-        visited[current] = True
-        if current == end:
-            reconstructPath(came_from, end, draw)
-            return True
-        if current != start:
-            current.makeVisited()
-        for neighbor in current.neighbors:
-            weight = 1
-            if distance[current] + weight < distance[neighbor]:
-                came_from[neighbor] = current
-                distance[neighbor] = distance[current] + weight
-                priority_queue.put((distance[neighbor], neighbor))
-            if neighbor != end and neighbor != start and not visited[neighbor]:
-                neighbor.makeVisiting()
-        draw()
-    return False
 
 
 def algorithm(draw, grid, start, end):
     aStar(draw, grid, start, end)
     # dijkstra(draw, grid, start, end)
-
-
-def huresticFunction(intermediate_node, end_node):
-    x1, y1 = intermediate_node
-    x2, y2 = end_node
-    return abs(x1 - x2) + abs(y1 - y2)
 
 
 def buildGrid(row, width):
